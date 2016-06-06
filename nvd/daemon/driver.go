@@ -4,7 +4,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"sync"
 	"github.com/docker/go-plugins-helpers/volume"
-	"github.com/Nexenta/nedge-docker-volume/nedv/nedapi"
+	"github.com/qeas/nexenta-docker-volume/nvd/nvdapi"
 )
 
 type NexentaDriver struct {
@@ -12,13 +12,13 @@ type NexentaDriver struct {
 	DefaultVolSz   int64
 	MountPoint     string
 	InitiatorIFace string
-	Client         *nedapi.Client
+	Client         *nvdapi.Client
 	Mutex          *sync.Mutex
 }
 
 func DriverAlloc(cfgFile string) NexentaDriver {
 
-	client, _ := nedapi.ClientAlloc(cfgFile)
+	client, _ := nvdapi.ClientAlloc(cfgFile)
 
 	mntPoint := "/foo"
 	initiator := "iscsiInterface"
@@ -36,7 +36,7 @@ func DriverAlloc(cfgFile string) NexentaDriver {
 }
 
 func (d NexentaDriver) Create(r volume.Request) volume.Response {
-	log.Infof("Create volume %s on %s\n", r.Name, "nedge")
+	log.Infof("Create volume %s on %s\n", r.Name, "Nexenta")
 
 	d.Mutex.Lock()
 	defer d.Mutex.Unlock()
@@ -63,7 +63,7 @@ func (d NexentaDriver) List(r volume.Request) volume.Response {
 func (d NexentaDriver) Mount(r volume.Request) volume.Response {
 	d.Mutex.Lock()
 	defer d.Mutex.Unlock()
-	log.Infof("Mounting volume %s on %s\n", r.Name, "nedge")
+	log.Infof("Mounting volume %s on %s\n", r.Name, "Nexenta")
 
 	return volume.Response{Mountpoint: "/" + r.Name}
 }

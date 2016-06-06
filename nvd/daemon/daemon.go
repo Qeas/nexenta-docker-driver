@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	defaultDir = filepath.Join(volume.DefaultDockerRootDirectory, "nedge")
+	defaultDir = filepath.Join(volume.DefaultDockerRootDirectory, "nvd")
 )
 
 func Start(cfgFile string, debug bool) {
@@ -16,9 +16,9 @@ func Start(cfgFile string, debug bool) {
 	} else {
 		log.SetLevel(log.InfoLevel)
 	}
-	log.Info("Default docker root nedge: ", defaultDir)
+	log.Info("Default docker root nvd: ", defaultDir)
 	d := DriverAlloc(cfgFile)
 	h := volume.NewHandler(d)
 	log.Info("Driver Created, Handler Initialized")
-	log.Info(h.ServeUnix("root", "toor"))
+	log.Info(h.ServeUnix("root", "nvd"))
 }

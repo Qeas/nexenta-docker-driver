@@ -1,8 +1,8 @@
-package nedcli
+package nvdcli
 
 import (
 	"github.com/codegangsta/cli"
-	"github.com/Nexenta/nedge-docker-volume/nedv/daemon"
+	"github.com/qeas/nexenta-docker-volume/nvd/daemon"
 )
 
 var (
@@ -16,7 +16,7 @@ var (
 
 	DaemonStartCmd = cli.Command{
 		Name:  "start",
-		Usage: "Start the Nedge Docker Daemon: `start [options] NAME`",
+		Usage: "Start the Nexenta Docker Daemon: `start [options] NAME`",
 		Flags: []cli.Flag{
 			cli.BoolFlag{
 				Name:  "verbose, v",
@@ -24,7 +24,7 @@ var (
 			},
 			cli.StringFlag{
 				Name:  "config, c",
-				Usage: "Config file for daemon (default: /opt/nedge/etc/ccow/ned.json): `[--config /opt/nedge/etc/ccow/ned.json]`",
+				Usage: "Config file for daemon (default: /etc/nvd/nvd.json): `[--config /etc/nvd/nvd.json]`",
 			},
 		},
 		Action: cmdDaemonStart,
@@ -35,7 +35,7 @@ func cmdDaemonStart(c *cli.Context) {
 	verbose := c.Bool("verbose")
 	cfg := c.String("config")
 	if cfg == "" {
-		cfg = "/home/stack/nvd.json"
+		cfg = "/etc/nvd/nvd.json"
 	}
 	daemon.Start(cfg, verbose)
 }
