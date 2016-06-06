@@ -4,7 +4,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"sync"
 	"github.com/docker/go-plugins-helpers/volume"
-	"github.com/qeas/nexenta-docker-volume/nvd/nvdapi"
+	"github.com/qeas/nexenta-docker-driver/nvd/nvdapi"
 )
 
 type NexentaDriver struct {
