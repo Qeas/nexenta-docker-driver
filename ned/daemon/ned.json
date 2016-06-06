@@ -1,0 +1,8 @@
+{
+	"IOProtocol": "NFS",
+    	"Endpoint": "10.3.199.29:8080/",
+    	"TenantName": "docker",
+    	"AccessKey": "BCD2413AAEDF2323432",
+    	"SecretKey": "FOO_BAR",
+    	"MountPoint": "/nmounts"
+}
