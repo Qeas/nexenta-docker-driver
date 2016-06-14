@@ -14,6 +14,7 @@ func NvdCmdNotFound(c *cli.Context, command string) {
 func NvdInitialize(c *cli.Context) error {
 
 	cfgFile := c.GlobalString("config")
+	fmt.Println(cfgFile)
 	if cfgFile != "" {
 		fmt.Println("Found config: ", cfgFile);
 	}
@@ -35,7 +36,7 @@ func NewCli(version string) *cli.App {
 		},
 	}
 	app.CommandNotFound = NvdCmdNotFound
-	app.Before = NedInitialize
+	app.Before = NvdInitialize
 	app.Commands = []cli.Command{
 		DaemonCmd,
 		VolumeCmd,

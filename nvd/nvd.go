@@ -15,7 +15,7 @@ var (
 )
 
 func main() {
-	ncli := nvdli.NewCli(VERSION)
+	ncli := nvdcli.NewCli(VERSION)
 	ncli.Run(os.Args)
 }
 

@@ -3,16 +3,28 @@ package nvdcli
 import (
 	"fmt"
 	"github.com/codegangsta/cli"
+	"github.com/qeas/nexenta-docker-driver/nvd/nvdapi"
 )
+
 
 var (
 	VolumeCmd =  cli.Command{
-		Name:  "VolumeCmd",
+		Name:  "volume",
 		Usage: "Volume related commands",
 		Subcommands: []cli.Command{
 			VolumeCreateCmd,
 			VolumeDeleteCmd,
 			VolumeListCmd,
+		},
+		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "verbose, v",
+				Usage: "Enable verbose/debug logging: `[--verbose]`",
+			},
+			cli.StringFlag{
+				Name:  "config, c",
+				Usage: "Config file for daemon (default: /etc/nvd/nvd.json): `[--config /etc/nvd/nvd.json]`",
+			},
 		},
 	}
 
@@ -20,6 +32,10 @@ var (
 		Name:  "create",
 		Usage: "create a new volume: `create [options] NAME`",
 		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "name",
+				Usage: "volume name",
+			},
 			cli.StringFlag{
 				Name:  "size",
 				Usage: "size of volume in bytes ",
@@ -53,20 +69,55 @@ var (
 				Usage: ": range of volume`",
 			},
 		},
-		Action: cmdListVolume,
+		Action: cmdListVolumes,
 	}
 
 )
 
-
-func cmdCreateVolume(c *cli.Context) {
-	fmt.Println("cmdCreate: ", c.String("size"));
+func getClient(c *cli.Context) (client *nvdapi.Client) {
+	cfg := c.String("config")
+	if cfg == "" {
+		cfg = "/etc/nvd/nvd.json"
+	}
+	client, _ = nvdapi.ClientAlloc(cfg)
+	return client
 }
 
-func cmdDeleteVolume(c *cli.Context) {
-	fmt.Println("cmdDelete: ", c.String("name"));
+func cmdCreateVolume(c *cli.Context) cli.ActionFunc {
+	fmt.Println("cmdCreate: ", c.String("name"));
+	client := getClient(c)
+	client.CreateVolume(c.String("name"))
+	return nil
 }
 
-func cmdListVolume(c *cli.Context) {
-	fmt.Println("cmdDelete: ", c.String("name"));
+func cmdDeleteVolume(c *cli.Context) cli.ActionFunc {
+	fmt.Println("cmdDeleteVolume: ", c.String("name"));
+	client := getClient(c)
+	client.DeleteVolume(c.String("name"))
+	return nil
+}
+
+func cmdMountVolume(c *cli.Context) cli.ActionFunc {
+	fmt.Println("cmdMountVolume: ", c.String("name"));
+	client := getClient(c)
+	client.MountVolume(c.String("name"))
+	return nil
+}
+
+func cmdUnmountVolume(c *cli.Context) cli.ActionFunc {
+	fmt.Println("cmdUnmountVolume: ", c.String("name"));
+	client := getClient(c)
+	client.UnmountVolume(c.String("name"))
+	return nil
+}
+
+func cmdListVolumes(c *cli.Context) cli.ActionFunc {
+	client := getClient(c)
+	vols, err := client.ListVolumes()
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("cmdListVolumes: ", vols);
+	}
+	return nil
 }

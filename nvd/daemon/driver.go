@@ -4,11 +4,11 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"sync"
 	"github.com/docker/go-plugins-helpers/volume"
+	"path/filepath"
 	"github.com/qeas/nexenta-docker-driver/nvd/nvdapi"
 )
 
 type NexentaDriver struct {
-	TenantID       int64
 	DefaultVolSz   int64
 	MountPoint     string
 	InitiatorIFace string
@@ -20,15 +20,13 @@ func DriverAlloc(cfgFile string) NexentaDriver {
 
 	client, _ := nvdapi.ClientAlloc(cfgFile)
 
-	mntPoint := "/foo"
-	initiator := "iscsiInterface"
+	initiator := "NFS"
 
 	d := NexentaDriver{
-		TenantID:       1234,
 		DefaultVolSz:	1024,
 		Client:         client,
 		Mutex:          &sync.Mutex{},
-		MountPoint:     mntPoint,
+		MountPoint:     client.MountPoint,
 		InitiatorIFace: initiator,
 	}
 
@@ -36,55 +34,64 @@ func DriverAlloc(cfgFile string) NexentaDriver {
 }
 
 func (d NexentaDriver) Create(r volume.Request) volume.Response {
-	log.Infof("Create volume %s on %s\n", r.Name, "Nexenta")
 
 	d.Mutex.Lock()
 	defer d.Mutex.Unlock()
 
+	err := d.Client.CreateVolume(r.Name)
+	if err != nil {
+		return volume.Response{Err: err.Error()}
+	}
 	return volume.Response{}
 }
 
-
 func (d NexentaDriver) Get(r volume.Request) volume.Response {
-	log.Info("Get volume: ", r.Name)
-
-	Name := "FooVol"
-	mntPoint := "/barmnt"
-
-	return volume.Response{Volume: &volume.Volume{Name: Name, Mountpoint: mntPoint}}
+	path := d.Client.MountPoint + "/" + r.Name
+	name, err := d.Client.GetVolume(r.Name)
+	if err != nil {
+		log.Info("Failed to retrieve volume named ", r.Name, "during Get operation: ", err)
+		return volume.Response{Err: err.Error()}
+	}
+	return volume.Response{Volume: &volume.Volume{Name: name, Mountpoint: path}}
 }
 
 func (d NexentaDriver) List(r volume.Request) volume.Response {
-	log.Info("Get volume: ", r.Name)
+	vlist, err := d.Client.ListVolumes()
+	if err != nil {
+		log.Error(err)
+		return volume.Response{Err: err.Error()}
+	}
 	var vols []*volume.Volume
+	for _, name := range vlist {
+		if name != "" {
+			vols = append(vols, &volume.Volume{Name: name, Mountpoint: filepath.Join(d.Client.MountPoint, name)})
+		}
+	}
 	return volume.Response{Volumes: vols}
 }
 
 func (d NexentaDriver) Mount(r volume.Request) volume.Response {
 	d.Mutex.Lock()
 	defer d.Mutex.Unlock()
-	log.Infof("Mounting volume %s on %s\n", r.Name, "Nexenta")
-
-	return volume.Response{Mountpoint: "/" + r.Name}
+	mnt := d.Client.MountPoint + "/" + r.Name
+	d.Client.MountVolume(r.Name)
+	return volume.Response{Mountpoint: mnt}
 }
 
 func (d NexentaDriver) Path(r volume.Request) volume.Response {
-	log.Info("Retrieve path info for volume: ", r.Name)
-	path := r.Name
+	log.Debug("Retrieve path info for volume: ", r.Name)
+	path := filepath.Join(d.Client.MountPoint, r.Name)
 	log.Debug("Path reported as: ", path)
 	return volume.Response{Mountpoint: path}
 }
 
 func (d NexentaDriver) Remove(r volume.Request) volume.Response {
-
-	log.Info("Remove/Delete Volume: ", r.Name)
-
+	d.Client.DeleteVolume(r.Name)
 	return volume.Response{}
 }
 
 func (d NexentaDriver) Unmount(r volume.Request) volume.Response {
-	log.Info("Unmounting volume: ", r.Name)
-
+	d.Client.UnmountVolume(r.Name)
 	return volume.Response{}
 }
 
