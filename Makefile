@@ -1,39 +1,14 @@
-NED_EXE = nedv
-FLAGS = -v
+NEDGE_DEST = /usr/bin/
+NEDGE_ETC = /etc/nvd/
+NDVOL_EXE = ndvol
 
-all: $(NED_EXE)
-
-GO_FILES = src/github.com/Nexenta/nedge-docker-volume/nedv/nedv.go \
-	src/github.com/Nexenta/nedge-docker-volume/nedv/nedcli/nedcli.go \
-	src/github.com/Nexenta/nedge-docker-volume/nedv/nedcli/Foo.go \
-	src/github.com/Nexenta/nedge-docker-volume/nedv/nedcli/Bar.go \
-	src/github.com/Nexenta/nedge-docker-volume/nedv/daemon/daemon.go \
-	src/github.com/Nexenta/nedge-docker-volume/nedv/daemon/driver.go \
-	src/github.com/Nexenta/nedge-docker-volume/nedv/nedapi/nedapi.go
-
-$(GO_FILES): setup
-
-deps: setup
-	GOPATH=$(shell pwd) go get github.com/docker/go-plugins-helpers/volume
-	GOPATH=$(shell pwd) go get github.com/codegangsta/cli
-	GOPATH=$(shell pwd) go get github.com/Sirupsen/logrus
-	GOPATH=$(shell pwd) go get github.com/coreos/go-systemd/util
-	GOPATH=$(shell pwd) go get github.com/opencontainers/runc/libcontainer/user
-	GOPATH=$(shell pwd) go get golang.org/x/net/proxy
-
-
-$(NED_EXE): $(GO_FILES)
-	GOPATH=$(shell pwd) go install github.com/Nexenta/nedge-docker-volume/nedv
-
-build:
-	GOPATH=$(shell pwd) go build $(FLAGS) github.com/Nexenta/nedge-docker-volume/nedv
-
-setup: 
-	mkdir -p src/github.com/Nexenta/nedge-docker-volume/ 
-	cp -R ned/ src/github.com/Nexenta/nedge-docker-volume/nedv 
+build: 
+	go get -v github.com/docker/go-plugins-helpers/...
+	cd $(GOPATH)/src/github.com/docker/go-plugins-helpers/volume; git checkout 60d242c
+	go get -v github.com/Nexenta/nedge-docker-volume/...
 
 lint:
-	GOPATH=$(shell pwd) go get -v github.com/golang/lint/golint
+	GOPATH=$(shell pwd) GOROOT=$(GO_INSTALL) $(GO) get -v github.com/golang/lint/golint
 	for file in $$(find . -name '*.go' | grep -v vendor | grep -v '\.pb\.go' | grep -v '\.pb\.gw\.go'); do \
 		golint $${file}; \
 		if [ -n "$$(golint $${file})" ]; then \
@@ -41,11 +16,12 @@ lint:
 		fi; \
 	done
 
+install: .build
+	cp -f $(GOPATH)/bin/$(NDVOL_EXE) $(NEDGE_DEST)
+
+uninstall:
+	rm -f $(NEDGE_ETC)/ndvol.json
+	rm -f $(NEDGE_DEST)/ndvol
+
 clean:
-	GOPATH=$(shell pwd) go clean
-
-
-clobber:
-	rm -rf src/github.com/Nexenta/nedge-docker-volume
-	rm -rf bin/ pkg/
-
+	go clean github.com/Nexenta/nedge-docker-volume
